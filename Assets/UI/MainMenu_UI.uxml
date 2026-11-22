@@ -1,0 +1,9 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Label text="Title" selectable="true" focusable="true" style="position: absolute; top: 10px; left: 20px; right: 20px; bottom: auto; font-size: 30px; -unity-text-align: upper-center;"/>
+    <ui:VisualElement style="flex-grow: 1; position: relative; top: 70px; right: 1px; left: 10px; bottom: 10px; align-items: stretch; flex-direction: column; justify-content: flex-start; align-self: flex-start;">
+        <ui:Button text="Start" name="Start_Btn" style="height: 39px;"/>
+        <ui:Button text="Others" name="MainBtn_1"/>
+        <ui:Button text="Settings" name="Settings_Btn"/>
+        <ui:Button text="Exit" name="Exit_Btn"/>
+    </ui:VisualElement>
+</ui:UXML>
