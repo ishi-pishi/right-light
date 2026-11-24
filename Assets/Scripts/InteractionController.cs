@@ -6,24 +6,57 @@ public class InteractionController : MonoBehaviour
     [SerializeField] private float reach = 3f;
     [SerializeField] private LayerMask hitMask = ~0;
 
-    Pickupable current;
+    Pickupable lookedAt;
+    Pickupable highlighted;
+
+    public Pickupable Target => lookedAt;
+
+    void Awake()
+    {
+        if (cameraTransform == null && transform.parent != null)
+        {
+            var cam = transform.parent.GetComponentInChildren<Camera>();
+            if (cam != null) cameraTransform = cam.transform;
+        }
+
+        if (cameraTransform == null)
+        {
+            Debug.LogError("InteractionController needs a camera transform assigned.", this);
+            enabled = false;
+        }
+    }
 
     void Update()
     {
-        if (current == null) current = null;
+        FindObject();
+        SetHighlight();
+    }
 
-        Pickupable target = null;
+    void OnDisable()
+    {
+        if (highlighted != null) highlighted.SetHighlighted(false);
+        highlighted = null;
+        lookedAt = null;
+    }
+
+    void FindObject()
+    {
+        lookedAt = null;
 
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward,
-                out RaycastHit hit, reach, hitMask, QueryTriggerInteraction.Ignore))
+            out RaycastHit hit, reach, hitMask, QueryTriggerInteraction.Ignore))
         {
-            target = hit.collider.GetComponentInParent<Pickupable>();
+            lookedAt = hit.collider.GetComponentInParent<Pickupable>();
         }
+    }
 
-        if (target == current) return;
+    void SetHighlight()
+    {
+        if (lookedAt == highlighted) return;
 
-        if (current != null) current.SetHighlighted(false);
-        if (target != null) target.SetHighlighted(true);
-        current = target;
+        if (highlighted != null) highlighted.SetHighlighted(false);
+        if (lookedAt != null) lookedAt.SetHighlighted(true);
+
+        highlighted = lookedAt;
     }
 }
