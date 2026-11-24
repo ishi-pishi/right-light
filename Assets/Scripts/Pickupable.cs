@@ -1,6 +1,9 @@
 using System.Linq;
 using UnityEngine;
 
+//<summary>
+//  Pickupable objects can be picked up/moved by the Player but are also the only ones graded by EaselScorer.
+// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class Pickupable : MonoBehaviour
 {
