@@ -1,62 +1,90 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InteractionController : MonoBehaviour
 {
     [SerializeField] private Transform cameraTransform;
-    [SerializeField] private float reach = 3f;
+    [SerializeField] private float reach = 4f;
     [SerializeField] private LayerMask hitMask = ~0;
 
-    Pickupable lookedAt;
-    Pickupable highlighted;
+    [SerializeField] private float followSpeed = 15f;
+    [SerializeField] private float minDistance = 1f;
+    [SerializeField] private float maxDistance = 4f;
+    private InputAction grabAction;
 
-    public Pickupable Target => lookedAt;
+    Pickupable hovered;
+    Pickupable held;
+    float holdDistance;
 
     void Awake()
     {
-        if (cameraTransform == null && transform.parent != null)
-        {
-            var cam = transform.parent.GetComponentInChildren<Camera>();
-            if (cam != null) cameraTransform = cam.transform;
-        }
+        grabAction = InputSystem.actions.FindAction("Grab");
+    }
 
-        if (cameraTransform == null)
-        {
-            Debug.LogError("InteractionController needs a camera transform assigned.", this);
-            enabled = false;
-        }
+    void OnEnable() => grabAction.Enable();
+
+    void OnDisable()
+    {
+        grabAction.Disable();
+        if (held != null) Drop();
+        SetHovered(null);
     }
 
     void Update()
     {
-        FindObject();
-        SetHighlight();
+        if (held != null)
+        {
+            if (grabAction.WasReleasedThisFrame()) Drop();
+            return;
+        }
+
+        SetHovered(FindTarget());
+
+        if (hovered != null && grabAction.WasPressedThisFrame())
+            Grab(hovered);
     }
 
-    void OnDisable()
+    void FixedUpdate()
     {
-        if (highlighted != null) highlighted.SetHighlighted(false);
-        highlighted = null;
-        lookedAt = null;
+        if (held == null) return;
+
+        Vector3 point = cameraTransform.position + cameraTransform.forward * holdDistance;
+        held.Body.linearVelocity = (point - held.Body.position) * followSpeed;
     }
 
-    void FindObject()
+    Pickupable FindTarget()
     {
-        lookedAt = null;
-
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward,
             out RaycastHit hit, reach, hitMask, QueryTriggerInteraction.Ignore))
         {
-            lookedAt = hit.collider.GetComponentInParent<Pickupable>();
+            return hit.collider.GetComponentInParent<Pickupable>();
         }
+        return null;
     }
 
-    void SetHighlight()
+    void SetHovered(Pickupable next)
     {
-        if (lookedAt == highlighted) return;
+        if (next == hovered) return;
 
-        if (highlighted != null) highlighted.SetHighlighted(false);
-        if (lookedAt != null) lookedAt.SetHighlighted(true);
+        if (hovered != null) hovered.SetHighlighted(false);
+        if (next != null) next.SetHighlighted(true);
+        hovered = next;
+    }
 
-        highlighted = lookedAt;
+    void Grab(Pickupable target)
+    {
+        held = target;
+        SetHovered(null);
+
+        float d = Vector3.Distance(cameraTransform.position, held.transform.position);
+        holdDistance = Mathf.Clamp(d, minDistance, maxDistance);
+
+        held.Body.useGravity = false;
+    }
+
+    void Drop()
+    {
+        held.Body.useGravity = true;
+        held = null;
     }
 }
